@@ -2298,6 +2298,11 @@ export default class MetamaskController extends EventEmitter {
     return currentLocale;
   }
 
+  /**
+   * Initializes the provider on the Network Controller. It also runs
+   * controllers' logic that relies on that provider being initialized, passing
+   * it in.
+   */
   networkProviderInitialization() {
     this.networkController.initializeProvider();
 
@@ -2310,8 +2315,6 @@ export default class MetamaskController extends EventEmitter {
     this.deprecatedNetworkId = null;
     this.updateDeprecatedNetworkId();
 
-    // Initialize each of the controllers code that relies on network provider
-    // and blockTracker
     this.ensController.delayedInit(this.provider);
     this.accountTracker.delayedInit(this.blockTracker, this.provider);
     this.txController.delayedInit(this.provider, this.blockTracker);
