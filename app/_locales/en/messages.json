@@ -3230,6 +3230,9 @@
   "origin": {
     "message": "Origin"
   },
+  "primaryType": {
+    "message": "Primary type"
+  },
   "osTheme": {
     "message": "System"
   },
