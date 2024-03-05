@@ -3,8 +3,8 @@ import React from 'react';
 import { isValidHexAddress } from '../../../../../../../shared/modules/hexstring-utils';
 import { sanitizeString } from '../../../../../../helpers/utils/util';
 
-import { ConfirmInfoRow, ConfirmInfoRowAddress, ConfirmInfoRowText } from '../';
 import { Box } from '../../../../../component-library';
+import { ConfirmInfoRow, ConfirmInfoRowAddress, ConfirmInfoRowText } from '..';
 
 type TreeData = {
   value: string | Record<string, TreeData>;
@@ -19,7 +19,9 @@ export const DataTree = ({ data }: { data: Record<string, TreeData> }) => (
       }
       return (
         <ConfirmInfoRow
-          label={`${sanitizeString(label.charAt(0).toUpperCase() + label.slice(1))}:`}
+          label={`${sanitizeString(
+            label.charAt(0).toUpperCase() + label.slice(1),
+          )}:`}
           key={`tree-data-${label}-index-${i}`}
         >
           {type === 'address' &&

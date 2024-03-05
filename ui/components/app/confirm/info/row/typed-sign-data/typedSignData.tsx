@@ -2,11 +2,11 @@ import React from 'react';
 
 import { sanitizeMessage } from '../../../../../../helpers/utils/util';
 import { useI18nContext } from '../../../../../../hooks/useI18nContext';
-import { ConfirmInfoRow, ConfirmInfoRowText } from '../';
-
-import { DataTree } from './dataTree';
 import { Box } from '../../../../../component-library';
 import { BlockSize } from '../../../../../../helpers/constants/design-system';
+import { ConfirmInfoRow, ConfirmInfoRowText } from '..';
+
+import { DataTree } from './dataTree';
 
 const parseMessage = (dataToParse: string) => {
   const { message, primaryType, types } = JSON.parse(dataToParse);
@@ -25,7 +25,7 @@ export const ConfirmInfoRowTypedSignData = ({ data }: { data: string }) => {
 
   return (
     <Box width={BlockSize.Full} style={{ margin: '0 -8px' }}>
-      <ConfirmInfoRow label={t('primaryType')}>
+      <ConfirmInfoRow label={`${t('primaryType')}:`}>
         <ConfirmInfoRowText text={primaryType} />
       </ConfirmInfoRow>
       <Box style={{ margin: '0 -8px' }}>
