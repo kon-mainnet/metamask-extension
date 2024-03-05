@@ -47,7 +47,7 @@ exports[`ConfirmInfoRowTypedSignData should match snapshot 1`] = `
             <p
               class="mm-box mm-text mm-text--body-md-medium mm-box--color-inherit"
             >
-              Contents
+              Contents:
             </p>
           </div>
           <div
@@ -74,7 +74,7 @@ exports[`ConfirmInfoRowTypedSignData should match snapshot 1`] = `
               <p
                 class="mm-box mm-text mm-text--body-md-medium mm-box--color-inherit"
               >
-                Name
+                Name:
               </p>
             </div>
             <div
@@ -101,7 +101,7 @@ exports[`ConfirmInfoRowTypedSignData should match snapshot 1`] = `
                 <p
                   class="mm-box mm-text mm-text--body-md-medium mm-box--color-inherit"
                 >
-                  0
+                  0:
                 </p>
               </div>
               <div
@@ -178,7 +178,7 @@ exports[`ConfirmInfoRowTypedSignData should match snapshot 1`] = `
                 <p
                   class="mm-box mm-text mm-text--body-md-medium mm-box--color-inherit"
                 >
-                  1
+                  1:
                 </p>
               </div>
               <div
@@ -255,7 +255,7 @@ exports[`ConfirmInfoRowTypedSignData should match snapshot 1`] = `
                 <p
                   class="mm-box mm-text mm-text--body-md-medium mm-box--color-inherit"
                 >
-                  2
+                  2:
                 </p>
               </div>
               <div
@@ -340,7 +340,7 @@ exports[`ConfirmInfoRowTypedSignData should match snapshot 1`] = `
                 <p
                   class="mm-box mm-text mm-text--body-md-medium mm-box--color-inherit"
                 >
-                  Name
+                  Name:
                 </p>
               </div>
               <div
@@ -367,7 +367,7 @@ exports[`ConfirmInfoRowTypedSignData should match snapshot 1`] = `
                   <p
                     class="mm-box mm-text mm-text--body-md-medium mm-box--color-inherit"
                   >
-                    0
+                    0:
                   </p>
                 </div>
                 <div
@@ -444,7 +444,7 @@ exports[`ConfirmInfoRowTypedSignData should match snapshot 1`] = `
                   <p
                     class="mm-box mm-text mm-text--body-md-medium mm-box--color-inherit"
                   >
-                    1
+                    1:
                   </p>
                 </div>
                 <div
@@ -521,7 +521,7 @@ exports[`ConfirmInfoRowTypedSignData should match snapshot 1`] = `
                   <p
                     class="mm-box mm-text mm-text--body-md-medium mm-box--color-inherit"
                   >
-                    2
+                    2:
                   </p>
                 </div>
                 <div

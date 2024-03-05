@@ -11,17 +11,16 @@ type TreeData = {
   type: string;
 };
 
-export const DataTree = ({ data }: { data: Record<string, TreeData> }) => {
-  console.log('-----', JSON.stringify(data));
-  return (
+export const DataTree = ({ data }: { data: Record<string, TreeData> }) => (
   <Box marginLeft={2}>
     {Object.entries(data).map(([label, { value, type }], i) => {
       if (typeof value === 'object' && value !== null) {
-        return <DataTree data={value} />;
+        return <DataTree data={value} key={`tree-data-${label}-index-${i}`} />;
       }
       return (
         <ConfirmInfoRow
-          label={sanitizeString(label.charAt(0).toUpperCase() + label.slice(1))}
+          label={`${sanitizeString(label.charAt(0).toUpperCase() + label.slice(1))}:`}
+          key={`tree-data-${label}-index-${i}`}
         >
           {type === 'address' &&
           isValidHexAddress(value, {
@@ -36,4 +35,3 @@ export const DataTree = ({ data }: { data: Record<string, TreeData> }) => {
     })}
   </Box>
 );
-}
