@@ -2311,7 +2311,6 @@ export default class MetamaskController extends EventEmitter {
     this.deprecatedNetworkId = null;
     this.updateDeprecatedNetworkId();
 
-    this.ensController.delayedInit(this.provider);
     this.accountTracker.delayedInit(this.blockTracker, this.provider);
     this.txController.initialization();
     this.swapsController.delayedInit(this.provider);
