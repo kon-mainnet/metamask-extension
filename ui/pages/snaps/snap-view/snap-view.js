@@ -2,20 +2,22 @@ import React, { useEffect, useState } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { hasProperty } from '@metamask/utils';
-import { BackgroundColor } from '../../../helpers/constants/design-system';
+import {
+  AlignItems,
+  BackgroundColor,
+  Display,
+  JustifyContent,
+} from '../../../helpers/constants/design-system';
 import { SNAPS_ROUTE } from '../../../helpers/constants/routes';
+import { getSnaps, getPermissions } from '../../../selectors';
 import {
-  getSnaps,
-  getPermissions,
-  getTargetSubjectMetadata,
-} from '../../../selectors';
-import { getSnapName } from '../../../helpers/utils/util';
-import { ButtonIcon } from '../../../components/component-library';
-import {
-  Content,
-  Header,
-  Page,
-} from '../../../components/multichain/pages/page';
+  ButtonIcon,
+  Box,
+  ButtonIconSize,
+} from '../../../components/component-library';
+import { Content, Page } from '../../../components/multichain/pages/page';
+import SnapAuthorshipHeader from '../../../components/app/snaps/snap-authorship-header';
+import SnapHomeMenu from '../../../components/app/snaps/snap-home-menu';
 import SnapSettings from './snap-settings';
 import SnapHome from './snap-home';
 
@@ -40,22 +42,26 @@ function SnapView() {
     (state) => snap && getPermissions(state, snap.id),
   );
 
-  const targetSubjectMetadata = useSelector((state) =>
-    getTargetSubjectMetadata(state, snap?.id),
-  );
-
   const hasHomePage =
     permissions && hasProperty(permissions, 'endowment:page-home');
   const [showSettings, setShowSettings] = useState(!hasHomePage);
+  const [initRemove, setInitRemove] = useState(false);
 
   if (!snap) {
     return null;
   }
 
-  const snapName = getSnapName(snap.id, targetSubjectMetadata);
-
   const handleSettingsClick = () => {
     setShowSettings(true);
+  };
+
+  const handleSnapRemove = () => {
+    setInitRemove(true);
+    setShowSettings(true);
+  };
+
+  const resetInitRemove = () => {
+    setInitRemove(false);
   };
 
   const handleBackClick = () => {
@@ -66,39 +72,50 @@ function SnapView() {
     }
   };
 
+  const renderBackButton = () => {
+    return (
+      <Box
+        display={Display.Flex}
+        justifyContent={JustifyContent.center}
+        alignItems={AlignItems.center}
+      >
+        <ButtonIcon
+          ariaLabel="Back"
+          iconName="arrow-left"
+          size={ButtonIconSize.Md}
+          onClick={handleBackClick}
+        />
+      </Box>
+    );
+  };
+
   return (
     <div className="snap-view">
       <Page backgroundColor={BackgroundColor.backgroundDefault}>
-        <Header
-          backgroundColor={BackgroundColor.backgroundDefault}
-          startAccessory={
-            <ButtonIcon
-              ariaLabel="Back"
-              iconName="arrow-left"
-              size="sm"
-              onClick={handleBackClick}
+        <SnapAuthorshipHeader
+          snapId={snapId}
+          showInfo={false}
+          startAccessory={renderBackButton()}
+          endAccessory={
+            <SnapHomeMenu
+              snapId={snapId}
+              onSettingsClick={handleSettingsClick}
+              onRemoveClick={handleSnapRemove}
+              isSettingsAvailable={!snap.preinstalled}
             />
           }
-          endAccessory={
-            !showSettings && (
-              <ButtonIcon
-                ariaLabel="Settings"
-                iconName="setting"
-                size="sm"
-                onClick={handleSettingsClick}
-              />
-            )
-          }
-        >
-          {snapName}
-        </Header>
+        ></SnapAuthorshipHeader>
         <Content
           backgroundColor={BackgroundColor.backgroundDefault}
           className="snap-view__content"
-          paddingTop={0}
+          marginTop={4}
         >
           {showSettings ? (
-            <SnapSettings snapId={snapId} />
+            <SnapSettings
+              snapId={snapId}
+              initRemove={initRemove}
+              resetInitRemove={resetInitRemove}
+            />
           ) : (
             <SnapHome snapId={snapId} />
           )}

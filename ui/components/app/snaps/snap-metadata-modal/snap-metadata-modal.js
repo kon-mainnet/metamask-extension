@@ -5,6 +5,7 @@ import { getSnapPrefix, stripSnapPrefix } from '@metamask/snaps-utils';
 import {
   getSnap,
   getSnapRegistryData,
+  getSnapMetadata,
   getTargetSubjectMetadata,
 } from '../../../../selectors';
 import {
@@ -32,11 +33,9 @@ import {
   TextVariant,
 } from '../../../../helpers/constants/design-system';
 import SnapAvatar from '../snap-avatar';
-import { formatDate, getSnapName } from '../../../../helpers/utils/util';
+import { formatDate } from '../../../../helpers/utils/util';
 import { useI18nContext } from '../../../../hooks/useI18nContext';
 import { useOriginMetadata } from '../../../../hooks/useOriginMetadata';
-import { SnapDelineator } from '../snap-delineator';
-import { DelineatorType } from '../../../../helpers/constants/snaps';
 import { ShowMore } from '../show-more';
 import SnapExternalPill from '../snap-version/snap-external-pill';
 import { useSafeWebsite } from '../../../../hooks/snaps/useSafeWebsite';
@@ -49,6 +48,10 @@ export const SnapMetadataModal = ({ snapId, isOpen, onClose }) => {
     getTargetSubjectMetadata(state, snapId),
   );
 
+  const { name: snapName, description } = useSelector((state) =>
+    getSnapMetadata(state, snapId),
+  );
+
   const snap = useSelector((state) => getSnap(state, snapId));
 
   const versionHistory = snap?.versionHistory ?? [];
@@ -58,7 +61,6 @@ export const SnapMetadataModal = ({ snapId, isOpen, onClose }) => {
 
   const installOrigin = useOriginMetadata(installInfo?.origin);
 
-  const snapName = getSnapName(snapId, subjectMetadata);
   const snapPrefix = getSnapPrefix(snapId);
   const packageName = stripSnapPrefix(snapId);
   const isNPM = snapPrefix === 'npm:';
@@ -218,15 +220,18 @@ export const SnapMetadataModal = ({ snapId, isOpen, onClose }) => {
             </Text>
             <Text ellipsis>{subjectMetadata?.version}</Text>
           </Box>
-          <SnapDelineator
-            type={DelineatorType.Description}
-            snapName={snapName}
-            boxProps={{ marginTop: 4 }}
+          <Box
+            display={Display.Flex}
+            flexDirection={FlexDirection.Column}
+            marginTop={4}
           >
+            <Text variant={TextVariant.bodyMdMedium} marginRight={4}>
+              {t('descriptionFromSnap', [snapName])}
+            </Text>
             <ShowMore>
-              <Text>{snap?.manifest.description}</Text>
+              <Text>{description}</Text>
             </ShowMore>
-          </SnapDelineator>
+          </Box>
         </Box>
       </ModalContent>
     </Modal>

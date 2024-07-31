@@ -17,7 +17,7 @@ export const SnapUIInput: FunctionComponent<
 > = ({ name, form, ...props }) => {
   const { handleInputChange, getValue } = useSnapInterfaceContext();
 
-  const initialValue = getValue(name, form);
+  const initialValue = getValue<string>(name, form);
 
   const [value, setValue] = useState(initialValue ?? '');
 
@@ -31,12 +31,11 @@ export const SnapUIInput: FunctionComponent<
     setValue(event.target.value);
     handleInputChange(name, event.target.value ?? null, form);
   };
+
   return (
     <FormTextField
       className="snap-ui-renderer__input"
       id={name}
-      marginBottom={1}
-      marginTop={1}
       value={value}
       onChange={handleChange}
       {...props}

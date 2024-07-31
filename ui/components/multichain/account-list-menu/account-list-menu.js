@@ -3,8 +3,15 @@ import PropTypes from 'prop-types';
 import { useHistory } from 'react-router-dom';
 import Fuse from 'fuse.js';
 import { useDispatch, useSelector } from 'react-redux';
+///: BEGIN:ONLY_INCLUDE_IF(build-flask)
+import { KeyringClient } from '@metamask/keyring-api';
 import {
-  BannerBase,
+  BITCOIN_WALLET_NAME,
+  BITCOIN_WALLET_SNAP_ID,
+  BitcoinWalletSnapSender,
+} from '../../../../app/scripts/lib/snap-keyring/bitcoin-wallet-snap';
+///: END:ONLY_INCLUDE_IF
+import {
   Box,
   ButtonLink,
   ButtonSecondary,
@@ -16,40 +23,40 @@ import {
   Text,
 } from '../../component-library';
 import { ModalContent } from '../../component-library/modal-content/deprecated';
-import { ModalHeader } from '../../component-library/modal-header/deprecated';
+import { ModalHeader } from '../../component-library/modal-header';
 import { TextFieldSearch } from '../../component-library/text-field-search/deprecated';
 import {
   AccountListItem,
-  CreateAccount,
-  ImportAccount,
   AccountListItemMenuTypes,
+  CreateEthAccount,
+  ImportAccount,
 } from '..';
 import {
   AlignItems,
-  BackgroundColor,
   BlockSize,
   Display,
   FlexDirection,
-  JustifyContent,
   Size,
   TextColor,
 } from '../../../helpers/constants/design-system';
 import { useI18nContext } from '../../../hooks/useI18nContext';
 import { MetaMetricsContext } from '../../../contexts/metametrics';
 import {
-  getMetaMaskAccountsOrdered,
   getConnectedSubjectsForAllAddresses,
-  getOriginOfCurrentTab,
-  getUpdatedAndSortedAccounts,
   getHiddenAccountsList,
-  getSelectedInternalAccount,
   ///: BEGIN:ONLY_INCLUDE_IF(keyring-snaps)
   getIsAddSnapAccountEnabled,
   ///: END:ONLY_INCLUDE_IF
-  getOnboardedInThisUISession,
-  getShowAccountBanner,
+  ///: BEGIN:ONLY_INCLUDE_IF(build-flask)
+  getIsBitcoinSupportEnabled,
+  getIsBitcoinTestnetSupportEnabled,
+  ///: END:ONLY_INCLUDE_IF
+  getMetaMaskAccountsOrdered,
+  getOriginOfCurrentTab,
+  getSelectedInternalAccount,
+  getUpdatedAndSortedAccounts,
 } from '../../../selectors';
-import { hideAccountBanner, setSelectedAccount } from '../../../store/actions';
+import { setSelectedAccount } from '../../../store/actions';
 import {
   MetaMetricsEventAccountType,
   MetaMetricsEventCategory,
@@ -64,7 +71,13 @@ import {
 import { getEnvironmentType } from '../../../../app/scripts/lib/util';
 import { ENVIRONMENT_TYPE_POPUP } from '../../../../shared/constants/app';
 import { getAccountLabel } from '../../../helpers/utils/accounts';
-import { getCompletedOnboarding } from '../../../ducks/metamask/metamask';
+///: BEGIN:ONLY_INCLUDE_IF(build-flask)
+import {
+  hasCreatedBtcMainnetAccount,
+  hasCreatedBtcTestnetAccount,
+} from '../../../selectors/accounts';
+import { MultichainNetworks } from '../../../../shared/constants/multichain/networks';
+///: END:ONLY_INCLUDE_IF
 import { HiddenAccountList } from './hidden-account-list';
 
 const ACTION_MODES = {
@@ -74,8 +87,40 @@ const ACTION_MODES = {
   MENU: 'menu',
   // Displays the add account form controls
   ADD: 'add',
+  ///: BEGIN:ONLY_INCLUDE_IF(build-flask)
+  // Displays the add account form controls (for bitcoin account)
+  ADD_BITCOIN: 'add-bitcoin',
+  // Same but for testnet
+  ADD_BITCOIN_TESTNET: 'add-bitcoin-testnet',
+  ///: END:ONLY_INCLUDE_IF
   // Displays the import account form controls
   IMPORT: 'import',
+};
+
+/**
+ * Gets the title for a given action mode.
+ *
+ * @param t - Function to translate text.
+ * @param actionMode - An action mode.
+ * @returns The title for this action mode.
+ */
+export const getActionTitle = (t, actionMode) => {
+  switch (actionMode) {
+    case ACTION_MODES.ADD:
+      return t('addAccount');
+    ///: BEGIN:ONLY_INCLUDE_IF(build-flask)
+    case ACTION_MODES.ADD_BITCOIN:
+      return t('addAccount');
+    case ACTION_MODES.ADD_BITCOIN_TESTNET:
+      return t('addAccount');
+    ///: END:ONLY_INCLUDE_IF
+    case ACTION_MODES.MENU:
+      return t('addAccount');
+    case ACTION_MODES.IMPORT:
+      return t('importAccount');
+    default:
+      return t('selectAnAccount');
+  }
 };
 
 /**
@@ -123,14 +168,31 @@ export const AccountListMenu = ({
   ///: BEGIN:ONLY_INCLUDE_IF(keyring-snaps)
   const addSnapAccountEnabled = useSelector(getIsAddSnapAccountEnabled);
   ///: END:ONLY_INCLUDE_IF
+  ///: BEGIN:ONLY_INCLUDE_IF(build-flask)
+  const bitcoinSupportEnabled = useSelector(getIsBitcoinSupportEnabled);
+  const bitcoinTestnetSupportEnabled = useSelector(
+    getIsBitcoinTestnetSupportEnabled,
+  );
+  const isBtcMainnetAccountAlreadyCreated = useSelector(
+    hasCreatedBtcMainnetAccount,
+  );
+  const isBtcTestnetAccountAlreadyCreated = useSelector(
+    hasCreatedBtcTestnetAccount,
+  );
+
+  const createBitcoinAccount = async (scope) => {
+    // Client to create the account using the Bitcoin Snap
+    const client = new KeyringClient(new BitcoinWalletSnapSender());
+
+    // This will trigger the Snap account creation flow (+ account renaming)
+    await client.createAccount({
+      scope,
+    });
+  };
+  ///: END:ONLY_INCLUDE_IF
 
   const [searchQuery, setSearchQuery] = useState('');
   const [actionMode, setActionMode] = useState(ACTION_MODES.LIST);
-  const completedOnboarding = useSelector(getCompletedOnboarding);
-  const onboardedInThisUISession = useSelector(getOnboardedInThisUISession);
-  const showAccountBanner = useSelector(getShowAccountBanner);
-  const showBanner =
-    completedOnboarding && !onboardedInThisUISession && showAccountBanner;
 
   let searchResults = updatedAccountsList;
   if (searchQuery) {
@@ -147,12 +209,7 @@ export const AccountListMenu = ({
   }
   searchResults = mergeAccounts(searchResults, accounts);
 
-  let title = t('selectAnAccount');
-  if (actionMode === ACTION_MODES.ADD || actionMode === ACTION_MODES.MENU) {
-    title = t('addAccount');
-  } else if (actionMode === ACTION_MODES.IMPORT) {
-    title = t('importAccount');
-  }
+  const title = getActionTitle(t, actionMode);
 
   let onBack = null;
   if (actionMode !== ACTION_MODES.LIST) {
@@ -180,7 +237,7 @@ export const AccountListMenu = ({
         </ModalHeader>
         {actionMode === ACTION_MODES.ADD ? (
           <Box paddingLeft={4} paddingRight={4} paddingBottom={4}>
-            <CreateAccount
+            <CreateEthAccount
               onActionComplete={(confirmed) => {
                 if (confirmed) {
                   onClose();
@@ -232,6 +289,66 @@ export const AccountListMenu = ({
                 {t('addNewAccount')}
               </ButtonLink>
             </Box>
+            {
+              ///: BEGIN:ONLY_INCLUDE_IF(build-flask)
+              bitcoinSupportEnabled && (
+                <Box marginTop={4}>
+                  <ButtonLink
+                    disabled={isBtcMainnetAccountAlreadyCreated}
+                    size={Size.SM}
+                    startIconName={IconName.Add}
+                    onClick={async () => {
+                      trackEvent({
+                        category: MetaMetricsEventCategory.Navigation,
+                        event: MetaMetricsEventName.AccountAddSelected,
+                        properties: {
+                          account_type: MetaMetricsEventAccountType.Snap,
+                          snap_id: BITCOIN_WALLET_SNAP_ID,
+                          snap_name: BITCOIN_WALLET_NAME,
+                          location: 'Main Menu',
+                        },
+                      });
+
+                      // The account creation + renaming is handled by the
+                      // Snap account bridge, so we need to close the current
+                      // model
+                      onClose();
+
+                      await createBitcoinAccount(MultichainNetworks.BITCOIN);
+                    }}
+                    data-testid="multichain-account-menu-popover-add-btc-account"
+                  >
+                    {t('addNewBitcoinAccount')}
+                  </ButtonLink>
+                </Box>
+              )
+              ///: END:ONLY_INCLUDE_IF
+            }
+            {
+              ///: BEGIN:ONLY_INCLUDE_IF(build-flask)
+              bitcoinTestnetSupportEnabled ? (
+                <Box marginTop={4}>
+                  <ButtonLink
+                    disabled={isBtcTestnetAccountAlreadyCreated}
+                    size={Size.SM}
+                    startIconName={IconName.Add}
+                    onClick={async () => {
+                      // The account creation + renaming is handled by the Snap account bridge, so
+                      // we need to close the current model
+                      onClose();
+
+                      await createBitcoinAccount(
+                        MultichainNetworks.BITCOIN_TESTNET,
+                      );
+                    }}
+                    data-testid="multichain-account-menu-popover-add-btc-account-testnet"
+                  >
+                    {t('addNewBitcoinTestnetAccount')}
+                  </ButtonLink>
+                </Box>
+              ) : null
+              ///: END:ONLY_INCLUDE_IF
+            }
             <Box marginTop={4}>
               <ButtonLink
                 size={Size.SM}
@@ -286,6 +403,14 @@ export const AccountListMenu = ({
                     startIconName={IconName.Snaps}
                     onClick={() => {
                       onClose();
+                      trackEvent({
+                        category: MetaMetricsEventCategory.Navigation,
+                        event: MetaMetricsEventName.AccountAddSelected,
+                        properties: {
+                          account_type: MetaMetricsEventAccountType.Snap,
+                          location: 'Main Menu',
+                        },
+                      });
                       global.platform.openTab({
                         url: process.env.ACCOUNT_SNAPS_DIRECTORY_URL,
                       });
@@ -350,27 +475,6 @@ export const AccountListMenu = ({
                 />
               </Box>
             ) : null}
-            {/* Accounts Pinning Update Banner */}
-            {showBanner ? (
-              <BannerBase
-                className="network-list-menu__banner"
-                marginLeft={4}
-                marginRight={4}
-                backgroundColor={BackgroundColor.backgroundAlternative}
-                startAccessory={
-                  <Box
-                    display={Display.Flex}
-                    alignItems={AlignItems.center}
-                    justifyContent={JustifyContent.center}
-                  >
-                    <img src="./images/pinning-animation.svg" alt="pinning" />
-                  </Box>
-                }
-                onClose={() => hideAccountBanner()}
-                description={t('accountsPinningBannerDescription')}
-                marginBottom={4}
-              />
-            ) : null}
             {/* Account list block */}
             <Box className="multichain-account-menu-popover__list">
               {searchResults.length === 0 && searchQuery !== '' ? (
@@ -415,12 +519,11 @@ export const AccountListMenu = ({
                         });
                         dispatch(setSelectedAccount(account.address));
                       }}
-                      identity={account}
+                      account={account}
                       key={account.address}
                       selected={selectedAccount.address === account.address}
                       closeMenu={onClose}
                       connectedAvatar={connectedSite?.iconUrl}
-                      connectedAvatarName={connectedSite?.name}
                       menuType={AccountListItemMenuTypes.Account}
                       isPinned={Boolean(account.pinned)}
                       isHidden={Boolean(account.hidden)}
